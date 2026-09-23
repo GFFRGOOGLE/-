@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Aurora</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0b1120;color:#e8eaf0;height:100vh;display:flex;flex-direction:column;overflow:hidden;font-size:15px}
+body.light{background:#f8fafc;color:#0f172a}
+.header{padding:14px;background:#121826;border-bottom:1px solid #232a42;display:flex;align-items:center;gap:10px;flex-shrink:0}
+body.light .header{background:#fff;border-color:#e2e8f0}
+.header h1{flex:1;font-size:16px;font-weight:700;background:linear-gradient(135deg,#22d3ee,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.header button{width:40px;height:40px;border-radius:12px;border:1px solid #232a42;background:#0b1120;color:#94a3b8;font-size:18px;cursor:pointer;flex-shrink:0}
+body.light .header button{background:#f8fafc;border-color:#e2e8f0;color:#64748b}
+.header button:active{background:#1a2035}
+.room-bar{padding:10px 14px;background:#121826;border-bottom:1px solid #232a42;display:flex;gap:8px;flex-shrink:0}
+body.light .room-bar{background:#fff;border-color:#e2e8f0}
+.room-bar input{flex:1;padding:12px 14px;background:#0b1120;border:1px solid #232a42;border-radius:12px;color:#e8eaf0;font-size:14px;outline:none;min-width:0}
+body.light .room-bar input{background:#f8fafc;border-color:#e2e8f0;color:#0f172a}
+.room-bar input:focus{border-color:#22d3ee}
+.room-bar button{padding:12px 18px;background:linear-gradient(135deg,#22d3ee,#a78bfa);border:none;border-radius:12px;color:#fff;font-weight:700;font-size:14px;cursor:pointer;flex-shrink:0}
+.room-bar button:active{opacity:.8}
+#msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px}
+.msg{max-width:85%;padding:10px 14px;border-radius:18px;font-size:14.5px;line-height:1.4;word-wrap:break-word}
+.msg.me{align-self:flex-end;background:linear-gradient(135deg,#0891b2,#7c3aed);color:#fff;border-bottom-right-radius:6px}
+.msg.them{align-self:flex-start;background:#1e293b;border:1px solid #232a42;border-bottom-left-radius:6px}
+body.light .msg.them{background:#e2e8f0;border-color:#cbd5e1;color:#0f172a}
+.msg.sys{align-self:center;background:transparent;color:#64748b;font-size:12px;padding:5px 14px;text-align:center;border:1px dashed #334155;border-radius:100px;max-width:90%}
+.msg .nm{font-size:11.5px;font-weight:700;color:#22d3ee;margin-bottom:3px}
+.msg img,.msg video{max-width:100%;border-radius:12px;margin-top:6px;display:block;max-height:380px;object-fit:cover}
+.msg audio{width:100%;margin-top:6px;height:40px}
+.file-card{display:flex;align-items:center;gap:10px;min-width:200px;padding:4px}
+.file-thumb{width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.msg.them .file-thumb{background:rgba(0,0,0,.15)}
+.file-info{flex:1;min-width:0}
+.file-name{font-weight:700;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.file-size{font-size:11px;opacity:.7;margin-top:2px}
+.file-dl{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;color:inherit;text-decoration:none;font-size:15px;flex-shrink:0}
+.msg.them .file-dl{background:rgba(0,0,0,.15)}
+.progress{height:3px;background:rgba(255,255,255,.15);border-radius:2px;overflow:hidden;margin-top:8px}
+.progress i{display:block;height:100%;background:linear-gradient(90deg,#22d3ee,#a78bfa);width:0;transition:width .2s}
+.input-bar{padding:10px 12px;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px) + 60px);display:flex;gap:6px;background:#121826;border-top:1px solid #232a42;flex-shrink:0;flex-wrap:wrap;align-items:flex-end}
+body.light .input-bar{background:#fff;border-color:#e2e8f0}
+.input-bar button{width:44px;height:44px;border-radius:12px;border:1px solid #232a42;background:#0b1120;color:#94a3b8;font-size:18px;cursor:pointer;flex-shrink:0}
+body.light .input-bar button{background:#f8fafc;border-color:#e2e8f0;color:#64748b}
+.input-bar button:active{background:#1a2035}
+.input-bar button.rec{background:#f43f5e;color:#fff;border-color:#f43f5e;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(244,63,94,.6)}50%{box-shadow:0 0 0 12px rgba(244,63,94,0)}}
+.input-bar textarea{flex:1;min-height:44px;max-height:120px;padding:12px 14px;background:#0b1120;border:1px solid #232a42;border-radius:14px;color:#e8eaf0;font-size:14.5px;font-family:inherit;outline:none;resize:none;line-height:1.4;min-width:140px}
+body.light .input-bar textarea{background:#f8fafc;border-color:#e2e8f0;color:#0f172a}
+.input-bar textarea:focus{border-color:#22d3ee}
+.input-bar .send{width:44px;height:44px;border-radius:12px;border:none;background:linear-gradient(135deg,#22d3ee,#a78bfa);color:#fff;font-size:18px;cursor:pointer;flex-shrink:0}
+#toast{position:fixed;bottom:120px;left:50%;transform:translateX(-50%) translateY(100px);padding:12px 22px;background:#1a2035;border:1px solid #334155;border-radius:14px;font-size:13.5px;color:#e8eaf0;opacity:0;transition:.3s;z-index:2000;max-width:90vw;text-align:center;pointer-events:none}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+#status{padding:6px 14px;background:#0b1120;border-bottom:1px solid #232a42;font-size:11px;color:#64748b;text-align:center;flex-shrink:0}
+body.light #status{background:#f8fafc;border-color:#e2e8f0}
+#status.ok{color:#10b981}
+#status.err{color:#f43f5e}
+#status.busy{color:#fbbf24}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1 id="title">📝 Заметки</h1>
+  <button id="btnNotes" title="Заметки">📝</button>
+  <button id="btnTheme" title="Тема">🌙</button>
+</div>
+
+<div class="room-bar">
+  <input id="roomInput" placeholder="Название комнаты" maxlength="40" autocomplete="off">
+  <button id="joinBtn">Войти</button>
+</div>
+
+<div id="status">Готово. Пишите — сохраняется.</div>
+<div id="msgs"></div>
+
+<div class="input-bar">
+  <button id="fileBtn" title="Файл">📎</button>
+  <button id="photoBtn" title="Фото/видео">🖼️</button>
+  <textarea id="msgInput" placeholder="Сообщение..." rows="1"></textarea>
+  <button id="voiceBtn" title="Голосовое">🎤</button>
+  <button class="send" id="sendBtn">➤</button>
+</div>
+
+<input type="file" id="fileInput" multiple style="display:none">
+<input type="file" id="photoInput" accept="image/*,video/*" multiple style="display:none">
+<div id="toast"></div>
+
+<script>
+(function(){
+  'use strict';
+
+  var $ = function(id){ return document.getElementById(id); };
+  var msgs = $('msgs');
+  var toast = $('toast');
+  var status = $('status');
+  var NOTE_KEY = 'aurora_notes_v3';
+  var ROOM_KEY = 'aurora_room_v3';
+  var THEME_KEY = 'aurora_theme_v3';
+  var CHUNK = 16 * 1024;
+
+  var room = null;
+  var sendText = null, sendFileMeta = null, sendFileChunk = null, sendFileEnd = null;
+  var sendTyp = null, sendName = null;
+  var cryptoKey = null;
+  var notesMode = true;
+  var roomId = null;
+  var peers = {};
+  var recv = {};   // входящие файлы
+  var lastTyp = 0;
+  var mediaRec = null;
+  var audioChunks = [];
+
+  // ============ ВСПОМОГАТЕЛЬНЫЕ ============
+  function showToast(t, d){
+    d = d || 2200;
+    toast.textContent = t;
+    toast.classList.add('show');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(function(){ toast.classList.remove('show'); }, d);
+  }
+  function setStatus(t, cls){
+    status.textContent = t;
+    status.className = cls || '';
+  }
+  function gid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+  function esc(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  function fmt(b){
+    if(b < 1024) return b + ' B';
+    if(b < 1048576) return (b/1024).toFixed(1) + ' KB';
+    if(b < 1073741824) return (b/1048576).toFixed(1) + ' MB';
+    return (b/1073741824).toFixed(2) + ' GB';
+  }
+  function isImage(name){ return /\.(png|jpe?g|gif|webp|svg|bmp)$/i.test(name); }
+  function isVideo(name){ return /\.(mp4|webm|ogg|mov|mkv)$/i.test(name); }
+  function isAudio(name){ return /\.(mp3|wav|ogg|m4a|flac|aac|webm)$/i.test(name); }
+
+  // ============ СООБЩЕНИЯ ============
+  function addMsg(text, type, sender, msgId){
+    type = type || 'them';
+    var d = document.createElement('div');
+    d.className = 'msg ' + type;
+    if(msgId) d.dataset.msgid = msgId;
+    if(sender && type === 'them'){
+      var n = document.createElement('div');
+      n.className = 'nm';
+      n.textContent = sender;
+      d.appendChild(n);
+    }
+    var sp = document.createElement('span');
+    sp.textContent = text;
+    d.appendChild(sp);
+    msgs.appendChild(d);
+    msgs.scrollTop = msgs.scrollHeight;
+    return d;
+  }
+  function clearMsgs(){ msgs.innerHTML = ''; }
+
+  function renderFile(name, size, url, side, msgId, sender){
+    var d = document.createElement('div');
+    d.className = 'msg ' + side;
+    if(msgId) d.dataset.msgid = msgId;
+    if(sender && side === 'them'){
+      var n = document.createElement('div');
+      n.className = 'nm';
+      n.textContent = sender;
+      d.appendChild(n);
+    }
+    var ic = isImage(name) ? '🖼️' : isVideo(name) ? '🎬' : isAudio(name) ? '🎵' : '📄';
+    var prev = '';
+    if(isImage(name)){
+      prev = '<img src="' + url + '" style="max-width:100%;border-radius:12px;margin-top:6px;display:block">';
+    } else if(isVideo(name)){
+      prev = '<video src="' + url + '" controls style="max-width:100%;border-radius:12px;margin-top:6px;display:block"></video>';
+    } else if(isAudio(name)){
+      prev = '<audio src="' + url + '" controls style="width:100%;margin-top:6px"></audio>';
+    }
+    d.innerHTML =
+      '<div class="file-card">' +
+        '<div class="file-thumb">' + ic + '</div>' +
+        '<div class="file-info">' +
+          '<div class="file-name">' + esc(name) + '</div>' +
+          '<div class="file-size">' + fmt(size) + '</div>' +
+        '</div>' +
+        '<a class="file-dl" href="' + url + '" download="' + esc(name) + '">⬇</a>' +
+      '</div>' + prev;
+    msgs.appendChild(d);
+    msgs.scrollTop = msgs.scrollHeight;
+    return d;
+  }
+
+  // ============ ЗАМЕТКИ (локально) ============
+  function getNotes(){
+    try { return JSON.parse(localStorage.getItem(NOTE_KEY) || '[]'); }
+    catch(e){ return []; }
+  }
+  function setNotes(a){
+    try { localStorage.setItem(NOTE_KEY, JSON.stringify(a.slice(-500))); }
+    catch(e){}
+  }
+  function addNote(item){
+    var a = getNotes();
+    a.push(item);
+    setNotes(a);
+  }
+  function delNote(id){
+    setNotes(getNotes().filter(function(x){ return x.id !== id; }));
+  }
+  function blobToB64(blob){
+    return new Promise(function(res, rej){
+      var r = new FileReader();
+      r.onload = function(){ res(r.result.split(',')[1]); };
+      r.onerror = rej;
+      r.readAsDataURL(blob);
+    });
+  }
+  function b64ToBlob(b64, type){
+    var bin = atob(b64);
+    var arr = new Uint8Array(bin.length);
+    for(var i=0; i<bin.length; i++) arr[i] = bin.charCodeAt(i);
+    return new Blob([arr], { type: type || 'application/octet-stream' });
+  }
+
+  function loadNotes(){
+    clearMsgs();
+    var notes = getNotes();
+    if(!notes.length){
+      addMsg('📝 Это заметки. Пишите сюда — всё сохраняется. Войти в комнату — введите название сверху.', 'sys');
+      return;
+    }
+    notes.forEach(function(n){
+      if(n.type === 'text'){
+        addMsg(n.text, 'me', null, n.id);
+      } else if(n.type === 'file' && n.blobData){
+        try {
+          var url = URL.createObjectURL(b64ToBlob(n.blobData, n.fileType));
+          renderFile(n.fileName, n.fileSize, url, 'me', n.id, null);
+        } catch(e){}
+      }
+    });
+  }
+
+  // ============ КРИПТО ============
+  async function initCrypto(id){
+    try {
+      var enc = new TextEncoder();
+      var km = await crypto.subtle.importKey(
+        'raw', enc.encode('p2p:' + id),
+        { name: 'PBKDF2' }, false, ['deriveKey']
+      );
+      cryptoKey = await crypto.subtle.deriveKey(
+        { name: 'PBKDF2', salt: enc.encode('aurora'), iterations: 100000, hash: 'SHA-256' },
+        km,
+        { name: 'AES-GCM', length: 256 },
+        false,
+        ['encrypt', 'decrypt']
+      );
+    } catch(e){ cryptoKey = null; }
+  }
+  async function encryptText(text){
+    if(!cryptoKey) return { plain: text };
+    var iv = crypto.getRandomValues(new Uint8Array(12));
+    var c = await crypto.subtle.encrypt(
+      { name: 'AES-GCM', iv: iv },
+      cryptoKey,
+      new TextEncoder().encode(text)
+    );
+    return { iv: Array.from(iv), enc: Array.from(new Uint8Array(c)) };
+  }
+  async function decryptText(p){
+    if(p.plain !== undefined) return p.plain;
+    if(!cryptoKey) return '[шифровано]';
+    try {
+      var r = await crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv: new Uint8Array(p.iv) },
+        cryptoKey,
+        new Uint8Array(p.enc)
+      );
+      return new TextDecoder().decode(r);
+    } catch(e){ return '[ошибка]'; }
+  }
+  async function encryptBuf(buf){
+    if(!cryptoKey) return buf;
+    var iv = crypto.getRandomValues(new Uint8Array(12));
+    var c = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, cryptoKey, buf);
+    var o = new Uint8Array(12 + c.byteLength);
+    o.set(iv, 0);
+    o.set(new Uint8Array(c), 12);
+    return o.buffer;
+  }
+  async function decryptBuf(buf){
+    if(!cryptoKey) return buf;
+    var v = new Uint8Array(buf);
+    return await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv: v.slice(0,12) },
+      cryptoKey,
+      v.slice(12)
+    );
+  }
+
+  // ============ ОТПРАВКА ТЕКСТА ============
+  async function sendMsg(){
+    var inp = $('msgInput');
+    var t = inp.value.trim();
+    if(!t) return;
+    var id = gid();
+
+    if(notesMode){
+      addMsg(t, 'me', null, id);
+      addNote({ id: id, type: 'text', text: t, ts: Date.now() });
+      inp.value = '';
+      inp.style.height = 'auto';
+      return;
+    }
+
+    if(!room || !sendText){
+      showToast('Сначала войдите в комнату');
+      return;
+    }
+
+    try {
+      var payload = await encryptText(t);
+      payload.msgId = id;
+      sendText(payload);
+      addMsg(t, 'me', null, id);
+      inp.value = '';
+      inp.style.height = 'auto';
+    } catch(e){
+      showToast('Ошибка: ' + e.message);
+    }
+  }
+
+  // ============ ОТПРАВКА ФАЙЛА ============
+  async function sendFile(file){
+    var id = gid();
+
+    if(notesMode){
+      // В заметках — сохраняем в localStorage (до 4 МБ)
+      var url = URL.createObjectURL(file);
+      renderFile(file.name, file.size, url, 'me', id, null);
+      var bd = null;
+      if(file.size < 4 * 1024 * 1024){
+        try { bd = await blobToB64(file); } catch(e){}
+      }
+      addNote({
+        id: id,
+        type: 'file',
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
+        blobData: bd,
+        ts: Date.now()
+      });
+      showToast(bd ? '📝 Сохранено' : '⚠️ Файл больше 4 МБ — не сохранится надолго');
+      return;
+    }
+
+    // В комнате — передаём собеседнику
+    if(!room || !sendFileMeta){
+      showToast('Сначала войдите в комнату');
+      return;
+    }
+
+    var enc = !!cryptoKey;
+    try {
+      sendFileMeta({ id: id, name: file.name, size: file.size, type: file.type, encrypted: enc });
+    } catch(e){
+      showToast('Ошибка отправки файла');
+      return;
+    }
+
+    var buf = await file.arrayBuffer();
+    var total = buf.byteLength;
+    var sent = 0;
+
+    // Показываем в чате с прогрессом
+    var tempEl = document.createElement('div');
+    tempEl.className = 'msg me';
+    tempEl.dataset.msgid = id;
+    tempEl.innerHTML =
+      '<div class="file-card">' +
+        '<div class="file-thumb">📄</div>' +
+        '<div class="file-info">' +
+          '<div class="file-name">' + esc(file.name) + '</div>' +
+          '<div class="file-size">' + fmt(file.size) + ' · отправка</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="progress"><i></i></div>';
+    msgs.appendChild(tempEl);
+    msgs.scrollTop = msgs.scrollHeight;
+    var bar = tempEl.querySelector('.progress i');
+    var info = tempEl.querySelector('.file-size');
+
+    var next = async function(){
+      if(sent >= total){
+        try { sendFileEnd({ id: id }, null); } catch(e){}
+        var finalUrl = URL.createObjectURL(file);
+        tempEl.remove();
+        renderFile(file.name, file.size, finalUrl, 'me', id, null);
+        showToast('📤 Отправлено');
+        return;
+      }
+      var slice = buf.slice(sent, sent + CHUNK);
+      var ch = slice;
+      if(enc){
+        try { ch = await encryptBuf(slice); } catch(e){ ch = slice; }
+      }
+      try { sendFileChunk(ch, null, { id: id }); } catch(e){}
+      sent += slice.byteLength;
+      var p = Math.round(sent / total * 100);
+      bar.style.width = p + '%';
+      info.textContent = fmt(file.size) + ' · ' + p + '%';
+      setTimeout(next, 0);
+    };
+    next();
+  }
+
+  // ============ ГОЛОСОВОЕ ============
+  async function toggleVoice(){
+    var btn = $('voiceBtn');
+    if(mediaRec && mediaRec.state === 'recording'){
+      mediaRec.stop();
+      btn.classList.remove('rec');
+      btn.textContent = '🎤';
+      return;
+    }
+    try {
+      var stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRec = new MediaRecorder(stream);
+      audioChunks = [];
+      mediaRec.ondataavailable = function(e){ audioChunks.push(e.data); };
+      mediaRec.onstop = function(){
+        var blob = new Blob(audioChunks, { type: 'audio/webm' });
+        var file = new File([blob], 'voice-' + Date.now() + '.webm', { type: 'audio/webm' });
+        sendFile(file);
+        stream.getTracks().forEach(function(t){ t.stop(); });
+      };
+      mediaRec.start();
+      btn.classList.add('rec');
+      btn.textContent = '⏹';
+      showToast('🎤 Запись... Нажмите ещё раз для отправки');
+    } catch(e){
+      showToast('Нет доступа к микрофону');
+    }
+  }
+
+  // ============ ВХОД В КОМНАТУ ============
+  async function joinRoom(id){
+    setStatus('⏳ Загрузка библиотеки связи...', 'busy');
+    notesMode = false;
+    roomId = id;
+    $('title').textContent = 'Комната: ' + id;
+
+    try {
+      var mod = null;
+      var urls = [
+        'https://esm.sh/trystero@0.21.5/mqtt',
+        'https://cdn.jsdelivr.net/npm/trystero@0.21.5/mqtt/+esm',
+        'https://esm.sh/trystero@0.21.5/nostr'
+      ];
+      for(var i=0; i<urls.length; i++){
+        try {
+          setStatus('⏳ Загрузка ' + (i+1) + '/' + urls.length + '...', 'busy');
+          mod = await import(urls[i]);
+          if(mod && mod.joinRoom) break;
+        } catch(e){
+          console.warn('Не удалось', urls[i], e.message);
+        }
+      }
+      if(!mod || !mod.joinRoom) throw new Error('Библиотека связи недоступна');
+
+      setStatus('⏳ Ключ шифрования...', 'busy');
+      await initCrypto(id);
+
+      setStatus('⏳ Подключение...', 'busy');
+
+      var iceServers = [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
+        { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' }
+      ];
+
+      room = mod.joinRoom({ appId: 'aurora-chat-v3', rtcConfig: { iceServers: iceServers } }, id);
+      location.hash = 'room=' + id;
+
+      // Регистрируем действия
+      var a1 = room.makeAction('t');
+      sendText = a1[0];
+      var onText = a1[1];
+
+      var a2 = room.makeAction('fm');
+      sendFileMeta = a2[0];
+      var onFileMeta = a2[1];
+
+      var a3 = room.makeAction('fc');
+      sendFileChunk = a3[0];
+      var onFileChunk = a3[1];
+
+      var a4 = room.makeAction('fe');
+      sendFileEnd = a4[0];
+      var onFileEnd = a4[1];
+
+      var a5 = room.makeAction('typ');
+      sendTyp = a5[0];
+      var onTyp = a5[1];
+
+      var a6 = room.makeAction('n');
+      sendName = a6[0];
+      var onName = a6[1];
+
+      // ---- Приём текста ----
+      onText(async function(payload, peerId){
+        var text = await decryptText(payload);
+        var name = (peers[peerId] && peers[peerId].name) || 'Аноним';
+        addMsg(text, 'them', name, payload.msgId);
+      });
+
+      // ---- Приём файла ----
+      onFileMeta(function(meta, peerId){
+        recv[meta.id] = {
+          name: meta.name,
+          size: meta.size,
+          type: meta.type,
+          encrypted: !!meta.encrypted,
+          chunks: [],
+          sender: peerId
+        };
+      });
+      onFileChunk(function(chunk, peerId, meta){
+        var f = recv[meta && meta.id];
+        if(!f) return;
+        f.chunks.push(chunk);
+      });
+      onFileEnd(async function(meta, peerId){
+        var f = recv[meta.id];
+        if(!f) return;
+        try {
+          var chunks = f.chunks;
+          if(f.encrypted && cryptoKey){
+            var out = [];
+            for(var i=0; i<chunks.length; i++){
+              try { out.push(await decryptBuf(chunks[i])); }
+              catch(e){ out.push(chunks[i]); }
+            }
+            chunks = out;
+          }
+          var blob = new Blob(chunks, { type: f.type || 'application/octet-stream' });
+          var url = URL.createObjectURL(blob);
+          var name = (peers[peerId] && peers[peerId].name) || 'Аноним';
+          renderFile(f.name, f.size, url, 'them', meta.id, name);
+        } catch(e){
+          showToast('Ошибка приёма файла');
+        }
+        delete recv[meta.id];
+      });
+
+      // ---- Печатает ----
+      onTyp(function(isT, peerId){
+        if(!isT) return;
+        var name = (peers[peerId] && peers[peerId].name) || 'Кто-то';
+        setStatus(name + ' печатает...', 'busy');
+        clearTimeout(window._typT);
+        window._typT = setTimeout(updateStatus, 2000);
+      });
+
+      // ---- Имя ----
+      onName(function(name, peerId){
+        if(!peers[peerId]) peers[peerId] = { name: name };
+        else peers[peerId].name = name;
+        updateStatus();
+      });
+
+      // ---- Участники ----
+      room.onPeerJoin(function(peerId){
+        if(!peers[peerId]) peers[peerId] = { name: 'Аноним-' + String(peerId).slice(0,4) };
+        addMsg('👤 Кто-то присоединился', 'sys');
+        // Сообщаем имя
+        try { sendName('Аноним', peerId); } catch(e){}
+        setTimeout(function(){ try { sendName('Аноним', peerId); } catch(e){} }, 700);
+        setTimeout(function(){ try { sendName('Аноним', peerId); } catch(e){} }, 1800);
+        updateStatus();
+      });
+      room.onPeerLeave(function(peerId){
+        var name = (peers[peerId] && peers[peerId].name) || 'Участник';
+        delete peers[peerId];
+        addMsg('👋 ' + name + ' вышел', 'sys');
+        updateStatus();
+      });
+
+      clearMsgs();
+      addMsg('🔒 Подключено к комнате «' + id + '»', 'sys');
+      addMsg('Ссылка для друга: ' + location.origin + location.pathname + '#room=' + id, 'sys');
+      updateStatus();
+      showToast('✅ Комната: ' + id);
+
+    } catch(e){
+      setStatus('❌ ' + e.message, 'err');
+      showToast('Ошибка: ' + e.message, 4000);
+      notesMode = true;
+      $('title').textContent = '📝 Заметки';
+      loadNotes();
+    }
+  }
+
+  function updateStatus(){
+    if(notesMode){
+      setStatus('Заметки. Всё сохраняется.');
+      return;
+    }
+    var count = Object.keys(peers).length;
+    if(count === 0){
+      setStatus('✅ В комнате. Ожидание участников...', 'ok');
+    } else {
+      setStatus('✅ В комнате: ' + count + ' участник(ов)', 'ok');
+    }
+  }
+
+  // ============ UI ============
+  $('sendBtn').onclick = function(){ sendMsg(); };
+  $('msgInput').addEventListener('keydown', function(e){
+    if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); sendMsg(); }
+  });
+  $('msgInput').addEventListener('input', function(){
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+    if(notesMode || !room || !sendTyp) return;
+    var n = Date.now();
+    if(n - lastTyp > 900){
+      try { sendTyp(true); } catch(e){}
+      lastTyp = n;
+    }
+  });
+
+  $('joinBtn').onclick = function(){
+    var raw = $('roomInput').value.trim().toLowerCase();
+    var c = raw.replace(/[^a-z0-9\-_]/g, '');
+    if(!c){ showToast('Введите название комнаты'); return; }
+    try { localStorage.setItem(ROOM_KEY, c); } catch(e){}
+    joinRoom(c);
+  };
+  $('roomInput').addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){ e.preventDefault(); $('joinBtn').click(); }
+  });
+
+  $('btnNotes').onclick = function(){
+    if(room){
+      if(!confirm('Выйти из комнаты и открыть заметки?')) return;
+      try { localStorage.removeItem(ROOM_KEY); } catch(e){}
+      location.reload();
+      return;
+    }
+    notesMode = true;
+    roomId = null;
+    $('title').textContent = '📝 Заметки';
+    loadNotes();
+    setStatus('Заметки. Всё сохраняется.');
+  };
+
+  $('btnTheme').onclick = function(){
+    var light = document.body.classList.toggle('light');
+    try { localStorage.setItem(THEME_KEY, light ? 'light' : 'dark'); } catch(e){}
+    $('btnTheme').textContent = light ? '☀️' : '🌙';
+  };
+
+  $('fileBtn').onclick = function(){ $('fileInput').click(); };
+  $('photoBtn').onclick = function(){ $('photoInput').click(); };
+  $('voiceBtn').onclick = toggleVoice;
+
+  $('fileInput').onchange = async function(e){
+    var files = Array.prototype.slice.call(e.target.files);
+    e.target.value = '';
+    for(var i=0; i<files.length; i++) await sendFile(files[i]);
+  };
+  $('photoInput').onchange = async function(e){
+    var files = Array.prototype.slice.call(e.target.files);
+    e.target.value = '';
+    for(var i=0; i<files.length; i++) await sendFile(files[i]);
+  };
+
+  // Удаление своих сообщений долгим тапом
+  var longTap = null;
+  document.addEventListener('touchstart', function(e){
+    var m = e.target.closest && e.target.closest('.msg.me');
+    if(!m || !m.dataset.msgid) return;
+    longTap = setTimeout(function(){
+      if(confirm('Удалить это сообщение?')){
+        var id = m.dataset.msgid;
+        m.remove();
+        delNote(id);
+      }
+    }, 600);
+  }, { passive: true });
+  document.addEventListener('touchend', function(){ clearTimeout(longTap); });
+  document.addEventListener('touchmove', function(){ clearTimeout(longTap); });
+
+  // ============ СТАРТ ============
+  try {
+    if(localStorage.getItem(THEME_KEY) === 'light'){
+      document.body.classList.add('light');
+      $('btnTheme').textContent = '☀️';
+    }
+  } catch(e){}
+
+  try {
+    var lastRoom = new URLSearchParams(location.hash.slice(1)).get('room') || localStorage.getItem(ROOM_KEY);
+    if(lastRoom){
+      $('roomInput').value = lastRoom;
+      joinRoom(lastRoom);
+    } else {
+      loadNotes();
+    }
+  } catch(e){
+    loadNotes();
+  }
+
+})();
+</script>
+</body>
+  </html>
